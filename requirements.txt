@@ -1,0 +1,16 @@
+# Core
+gradio>=4.0.0
+pyyaml>=6.0
+requests>=2.31.0
+httpx>=0.25.0
+Pillow>=10.0.0
+
+# Mesh processing
+trimesh>=4.0.0
+numpy>=1.24.0
+pymeshfix>=0.16.0
+
+# Optional: Local 3D inference
+# torch>=2.0.0  # Install separately based on CUDA version
+# triposr  # pip install git+https://github.com/VAST-AI-Research/TripoSR.git
+# trellis  # Install from source

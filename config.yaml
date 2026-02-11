@@ -1,0 +1,29 @@
+# KuroHatsumei Configuration
+
+ollama:
+  url: "http://localhost:11434"
+  model: "llama3.1:8b"
+
+comfyui:
+  url: "http://localhost:8188"
+  workflow_path: "workflows/flux_txt2img.json"
+  num_images: 4
+  poll_interval: 1.0  # seconds
+
+meshy:
+  api_key: ""  # Set via MESHY_API_KEY env var
+  api_url: "https://api.meshy.ai"
+  poll_interval: 5.0  # seconds
+
+# Anycubic Photon Mono M7 Pro build volume (mm)
+build_volume:
+  x: 223
+  y: 126
+  z: 230
+  margin: 5  # Safety margin from edges
+
+# 3D generation backend: triposr | trellis | meshy
+default_3d_backend: "triposr"
+
+# Output directory for projects
+output_dir: "output"
