@@ -35,6 +35,7 @@ env/
 
 # Project specific
 output/
+models/
 *.stl
 *.glb
 *.obj
