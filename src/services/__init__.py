@@ -22,3 +22,9 @@ try:
     __all__.append("TrellisClient")
 except ImportError:
     TrellisClient = None
+
+try:
+    from .sd_cpp import StableDiffusionCppClient
+    __all__.append("StableDiffusionCppClient")
+except ImportError:
+    StableDiffusionCppClient = None

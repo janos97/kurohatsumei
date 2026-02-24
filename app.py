@@ -13,7 +13,10 @@ from PIL import Image
 from src.config import get_config
 from src.utils.file_manager import create_project_folder, load_json, save_json
 from src.pipeline.stage1_prompt import generate_prompts, check_ollama
-from src.pipeline.stage2_image import generate_images, save_selected_image, check_comfyui
+from src.pipeline.stage2_image import (
+    generate_images, save_selected_image, check_comfyui,
+    check_image_backend, get_available_image_backends,
+)
 from src.pipeline.stage3_mesh import generate_mesh, get_available_backends
 from src.pipeline.stage4_repair import repair_and_export, format_stats_table
 
@@ -27,10 +30,12 @@ def check_services() -> str:
     status = "✓" if ok else "✗"
     lines.append(f"- **Ollama**: {status} {msg}")
 
-    # Check ComfyUI
-    ok, msg = check_comfyui()
-    status = "✓" if ok else "✗"
-    lines.append(f"- **ComfyUI**: {status} {msg}")
+    # Check image backends
+    image_backends = get_available_image_backends()
+    lines.append("\n### Image Backends")
+    for name, (ok, msg) in image_backends.items():
+        status = "✓" if ok else "✗"
+        lines.append(f"- **{name}**: {status} {msg}")
 
     # Check 3D backends
     backends = get_available_backends()
@@ -71,6 +76,7 @@ def stage1_generate(description: str, project_state: dict) -> tuple[str, str, st
 def stage2_generate(
     image_prompt: str,
     num_images: int,
+    image_backend: str,
     project_state: dict,
     progress=gr.Progress(),
 ) -> tuple[list[Image.Image], str, dict]:
@@ -89,6 +95,7 @@ def stage2_generate(
         image_prompt,
         project_state["folder"],
         num_images=num_images,
+        backend=image_backend.lower() if image_backend else None,
         callback=callback,
     )
 
@@ -244,7 +251,6 @@ def create_app() -> gr.Blocks:
 
     with gr.Blocks(
         title="KuroHatsumei",
-        theme=gr.themes.Soft(),
     ) as app:
         gr.Markdown("# KuroHatsumei")
         gr.Markdown("*Text-to-STL pipeline for resin 3D printing*")
@@ -296,6 +302,11 @@ def create_app() -> gr.Blocks:
 
             with gr.Row():
                 with gr.Column(scale=1):
+                    image_backend_radio = gr.Radio(
+                        choices=["sd_cpp", "comfyui"],
+                        value=config.default_image_backend,
+                        label="Image Backend",
+                    )
                     num_images_slider = gr.Slider(
                         minimum=1,
                         maximum=8,
@@ -326,7 +337,7 @@ def create_app() -> gr.Blocks:
 
             generate_images_btn.click(
                 stage2_generate,
-                inputs=[image_prompt_output, num_images_slider, project_state],
+                inputs=[image_prompt_output, num_images_slider, image_backend_radio, project_state],
                 outputs=[image_gallery, stage2_status, project_state],
             )
 
@@ -432,4 +443,4 @@ def create_app() -> gr.Blocks:
 
 if __name__ == "__main__":
     app = create_app()
-    app.launch()
+    app.launch(theme=gr.themes.Soft())

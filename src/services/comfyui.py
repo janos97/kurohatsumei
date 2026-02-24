@@ -1,4 +1,5 @@
 """ComfyUI API client for image generation."""
+from __future__ import annotations
 
 import json
 import time

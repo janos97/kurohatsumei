@@ -1,4 +1,5 @@
 """TRELLIS local inference wrapper for image-to-3D conversion."""
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Any

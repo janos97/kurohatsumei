@@ -1,7 +1,7 @@
 # KuroHatsumei Configuration
 
 ollama:
-  url: "http://localhost:11434"
+  url: "http://172.31.96.1:11434"
   model: "llama3.1:8b"
 
 comfyui:
@@ -9,6 +9,17 @@ comfyui:
   workflow_path: "workflows/flux_txt2img.json"
   num_images: 4
   poll_interval: 1.0  # seconds
+
+sd_cpp:
+  model_path: "models/sd15_q8_0.gguf"
+  n_threads: -1  # -1 = use all cores
+  wtype: "default"
+  width: 512
+  height: 512
+  cfg_scale: 7.0
+  sample_steps: 20
+  sample_method: "euler_a"
+  num_images: 4
 
 meshy:
   api_key: ""  # Set via MESHY_API_KEY env var
@@ -21,6 +32,9 @@ build_volume:
   y: 126
   z: 230
   margin: 5  # Safety margin from edges
+
+# Image generation backend: sd_cpp | comfyui
+default_image_backend: "sd_cpp"
 
 # 3D generation backend: triposr | trellis | meshy
 default_3d_backend: "triposr"

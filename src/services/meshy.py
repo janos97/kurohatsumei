@@ -1,4 +1,5 @@
 """Meshy API client for image-to-3D conversion."""
+from __future__ import annotations
 
 import base64
 import os

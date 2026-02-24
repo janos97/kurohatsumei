@@ -23,12 +23,24 @@ DEFAULT_CONFIG = {
         "api_url": "https://api.meshy.ai",
         "poll_interval": 5.0,
     },
+    "sd_cpp": {
+        "model_path": "models/sd15_q8_0.gguf",
+        "n_threads": -1,
+        "wtype": "default",
+        "width": 512,
+        "height": 512,
+        "cfg_scale": 7.0,
+        "sample_steps": 20,
+        "sample_method": "euler_a",
+        "num_images": 4,
+    },
     "build_volume": {
         "x": 223,
         "y": 126,
         "z": 230,
         "margin": 5,
     },
+    "default_image_backend": "comfyui",
     "default_3d_backend": "triposr",
     "output_dir": "output",
 }
@@ -80,7 +92,9 @@ class Config:
             "COMFYUI_URL": ("comfyui", "url"),
             "MESHY_API_KEY": ("meshy", "api_key"),
             "KUROHATSUMEI_OUTPUT_DIR": ("output_dir",),
+            "KUROHATSUMEI_IMAGE_BACKEND": ("default_image_backend",),
             "KUROHATSUMEI_3D_BACKEND": ("default_3d_backend",),
+            "SD_CPP_MODEL_PATH": ("sd_cpp", "model_path"),
         }
 
         for env_var, path in env_mappings.items():
@@ -140,6 +154,46 @@ class Config:
     @property
     def meshy_poll_interval(self) -> float:
         return self.get("meshy", "poll_interval")
+
+    @property
+    def sd_cpp_model_path(self) -> str:
+        return self.get("sd_cpp", "model_path")
+
+    @property
+    def sd_cpp_n_threads(self) -> int:
+        return self.get("sd_cpp", "n_threads")
+
+    @property
+    def sd_cpp_wtype(self) -> str:
+        return self.get("sd_cpp", "wtype")
+
+    @property
+    def sd_cpp_width(self) -> int:
+        return self.get("sd_cpp", "width")
+
+    @property
+    def sd_cpp_height(self) -> int:
+        return self.get("sd_cpp", "height")
+
+    @property
+    def sd_cpp_cfg_scale(self) -> float:
+        return self.get("sd_cpp", "cfg_scale")
+
+    @property
+    def sd_cpp_sample_steps(self) -> int:
+        return self.get("sd_cpp", "sample_steps")
+
+    @property
+    def sd_cpp_sample_method(self) -> str:
+        return self.get("sd_cpp", "sample_method")
+
+    @property
+    def sd_cpp_num_images(self) -> int:
+        return self.get("sd_cpp", "num_images")
+
+    @property
+    def default_image_backend(self) -> str:
+        return self.get("default_image_backend")
 
     @property
     def build_volume(self) -> dict[str, int]:

@@ -1,4 +1,5 @@
 """Stage 3: Image-to-3D mesh generation."""
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Literal
