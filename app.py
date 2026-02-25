@@ -364,7 +364,7 @@ def create_app() -> gr.Blocks:
             with gr.Row():
                 with gr.Column(scale=1):
                     backend_radio = gr.Radio(
-                        choices=["TripoSR", "TRELLIS", "Meshy"],
+                        choices=["TripoSR", "DepthMesh", "TRELLIS", "Meshy"],
                         value="TripoSR",
                         label="3D Backend",
                     )

@@ -10,7 +10,7 @@ from ..utils.file_manager import get_project_path
 
 
 # Backend type
-Backend = Literal["triposr", "trellis", "meshy"]
+Backend = Literal["triposr", "trellis", "meshy", "depthmesh"]
 
 
 def get_available_backends() -> dict[str, tuple[bool, str]]:
@@ -36,6 +36,14 @@ def get_available_backends() -> dict[str, tuple[bool, str]]:
         backends["trellis"] = client.check_availability()
     except ImportError:
         backends["trellis"] = (False, "TRELLIS not installed")
+
+    # Check DepthMesh
+    try:
+        from ..services.depthmesh import DepthMeshClient
+        client = DepthMeshClient()
+        backends["depthmesh"] = client.check_availability()
+    except ImportError:
+        backends["depthmesh"] = (False, "DepthMesh not installed")
 
     # Check Meshy
     client = MeshyClient()
@@ -71,7 +79,7 @@ def generate_mesh(
     backends_to_try = [backend]
 
     # Add fallback order
-    fallback_order = ["triposr", "trellis", "meshy"]
+    fallback_order = ["triposr", "depthmesh", "trellis", "meshy"]
     for fb in fallback_order:
         if fb not in backends_to_try:
             backends_to_try.append(fb)
@@ -142,6 +150,16 @@ def _generate_with_backend(
             return client.image_to_3d(image_path, callback)
         except ImportError:
             return False, "TRELLIS not installed"
+
+    elif backend == "depthmesh":
+        try:
+            from ..services.depthmesh import DepthMeshClient
+            client = DepthMeshClient()
+            if not client.is_available():
+                return False, "DepthMesh not available"
+            return client.image_to_3d(image_path, callback)
+        except ImportError:
+            return False, "DepthMesh not installed"
 
     elif backend == "meshy":
         client = MeshyClient()

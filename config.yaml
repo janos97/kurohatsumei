@@ -26,6 +26,13 @@ meshy:
   api_url: "https://api.meshy.ai"
   poll_interval: 5.0  # seconds
 
+depthmesh:
+  model: "depth-anything/Depth-Anything-V2-Small-hf"
+  resolution: 256
+  depth_scale: 1.0
+  back_offset: 0.1
+  edge_threshold: 0.3
+
 # Anycubic Photon Mono M7 Pro build volume (mm)
 build_volume:
   x: 223
@@ -36,7 +43,7 @@ build_volume:
 # Image generation backend: sd_cpp | comfyui
 default_image_backend: "sd_cpp"
 
-# 3D generation backend: triposr | trellis | meshy
+# 3D generation backend: triposr | trellis | meshy | depthmesh
 default_3d_backend: "triposr"
 
 # Output directory for projects

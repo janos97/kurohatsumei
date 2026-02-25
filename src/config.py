@@ -34,6 +34,13 @@ DEFAULT_CONFIG = {
         "sample_method": "euler_a",
         "num_images": 4,
     },
+    "depthmesh": {
+        "model": "depth-anything/Depth-Anything-V2-Small-hf",
+        "resolution": 256,
+        "depth_scale": 1.0,
+        "back_offset": 0.1,
+        "edge_threshold": 0.3,
+    },
     "build_volume": {
         "x": 223,
         "y": 126,
@@ -190,6 +197,26 @@ class Config:
     @property
     def sd_cpp_num_images(self) -> int:
         return self.get("sd_cpp", "num_images")
+
+    @property
+    def depthmesh_model(self) -> str:
+        return self.get("depthmesh", "model")
+
+    @property
+    def depthmesh_resolution(self) -> int:
+        return self.get("depthmesh", "resolution")
+
+    @property
+    def depthmesh_depth_scale(self) -> float:
+        return self.get("depthmesh", "depth_scale")
+
+    @property
+    def depthmesh_back_offset(self) -> float:
+        return self.get("depthmesh", "back_offset")
+
+    @property
+    def depthmesh_edge_threshold(self) -> float:
+        return self.get("depthmesh", "edge_threshold")
 
     @property
     def default_image_backend(self) -> str:

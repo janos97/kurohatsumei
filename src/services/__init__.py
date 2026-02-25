@@ -24,6 +24,12 @@ except ImportError:
     TrellisClient = None
 
 try:
+    from .depthmesh import DepthMeshClient
+    __all__.append("DepthMeshClient")
+except ImportError:
+    DepthMeshClient = None
+
+try:
     from .sd_cpp import StableDiffusionCppClient
     __all__.append("StableDiffusionCppClient")
 except ImportError:

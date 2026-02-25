@@ -1,6 +1,7 @@
 """TripoSR local inference wrapper for image-to-3D conversion."""
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -8,12 +9,20 @@ from typing import Any
 TRIPOSR_AVAILABLE = False
 _triposr_model = None
 
+# Path to vendored TripoSR source (no setup.py, tsr/ is a plain module)
+_VENDOR_DIR = str(Path(__file__).resolve().parents[2] / "vendor" / "TripoSR")
+
 
 def _check_triposr() -> bool:
     """Check if TripoSR is available."""
     global TRIPOSR_AVAILABLE
     try:
         import torch
+
+        # Ensure vendored TripoSR is on sys.path
+        if _VENDOR_DIR not in sys.path:
+            sys.path.insert(0, _VENDOR_DIR)
+
         import tsr  # TripoSR package
         TRIPOSR_AVAILABLE = True
         return True
@@ -31,8 +40,7 @@ def _load_model():
 
     if not _check_triposr():
         raise ImportError(
-            "TripoSR is not installed. Install with: "
-            "pip install git+https://github.com/VAST-AI-Research/TripoSR.git"
+            "TripoSR is not installed. Clone into vendor/TripoSR and install deps."
         )
 
     import torch
@@ -46,7 +54,27 @@ def _load_model():
     )
     _triposr_model.to(device)
 
+    # Set chunk size for CPU memory efficiency
+    _triposr_model.renderer.set_chunk_size(8192)
+
     return _triposr_model
+
+
+def _remove_background(image):
+    """Remove background from image using rembg, composite onto gray."""
+    import numpy as np
+
+    try:
+        from rembg import remove
+        rgba = remove(image)
+    except ImportError:
+        rgba = image.convert("RGBA")
+
+    # Composite RGBA onto 50% gray background (matches TripoSR's run.py)
+    from PIL import Image
+    arr = np.array(rgba).astype(np.float32) / 255.0
+    rgb = arr[:, :, :3] * arr[:, :, 3:4] + (1 - arr[:, :, 3:4]) * 0.5
+    return Image.fromarray((rgb * 255.0).astype(np.uint8))
 
 
 class TripoSRClient:
@@ -78,8 +106,7 @@ class TripoSRClient:
         """
         if not self.is_available():
             return False, (
-                "TripoSR is not available. Install with: "
-                "pip install git+https://github.com/VAST-AI-Research/TripoSR.git"
+                "TripoSR is not available. Clone into vendor/TripoSR and install deps."
             )
 
         try:
@@ -95,22 +122,23 @@ class TripoSRClient:
             device = next(model.parameters()).device
 
             if callback:
-                callback("Processing image...")
+                callback("Removing background...")
 
-            # Load and preprocess image
+            # Load and preprocess image with background removal
             image = Image.open(image_path).convert("RGB")
-
-            # Remove background if needed (simple approach - assume white/gray bg)
-            # TripoSR works better with transparent or removed backgrounds
-            image_np = np.array(image)
+            image = _remove_background(image)
 
             if callback:
-                callback("Generating 3D model...")
+                callback("Generating 3D model (this may take several minutes on CPU)...")
 
             # Run inference
             with torch.no_grad():
                 scene_codes = model([image], device=device)
-                meshes = model.extract_mesh(scene_codes)
+                meshes = model.extract_mesh(
+                    scene_codes,
+                    has_vertex_color=True,
+                    resolution=256,
+                )
 
             if not meshes or len(meshes) == 0:
                 return False, "TripoSR failed to generate mesh"
@@ -120,16 +148,16 @@ class TripoSRClient:
             if callback:
                 callback("Exporting mesh...")
 
-            # Convert to trimesh and export as GLB
-            # TripoSR returns vertices and faces
-            if hasattr(mesh, "vertices") and hasattr(mesh, "faces"):
+            # TripoSR returns trimesh.Trimesh objects directly
+            if isinstance(mesh, trimesh.Trimesh):
+                tri_mesh = mesh
+            elif hasattr(mesh, "vertices") and hasattr(mesh, "faces"):
                 tri_mesh = trimesh.Trimesh(
-                    vertices=mesh.vertices.cpu().numpy(),
-                    faces=mesh.faces.cpu().numpy(),
+                    vertices=np.asarray(mesh.vertices),
+                    faces=np.asarray(mesh.faces),
                 )
             else:
-                # If mesh is already a trimesh object
-                tri_mesh = mesh
+                return False, "Unexpected mesh format from TripoSR"
 
             glb_data = tri_mesh.export(file_type="glb")
 
@@ -137,8 +165,8 @@ class TripoSRClient:
 
         except FileNotFoundError:
             return False, f"Image file not found: {image_path}"
-        except torch.cuda.OutOfMemoryError:
-            return False, "GPU out of memory. Try with a smaller image or use Meshy API."
+        except MemoryError:
+            return False, "Out of memory. Try with a smaller image or use DepthMesh backend."
         except Exception as e:
             return False, f"TripoSR inference failed: {str(e)}"
 
